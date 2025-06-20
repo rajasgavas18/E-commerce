@@ -36,13 +36,13 @@ const upload = multer({ storage: storage });
 
 // Creating upload endpoint for images
 app.use('/images', express.static('upload/images'));
-app.post("/upload", upload.single('product'), (req, res) => {
+app.post("/upload", upload.single("product"), (req, res) => {
   res.json({
     success: 1,
-    image_url: `image_url: `${process.env.BACKEND_URL}/images/${req.file.filename}`
-`
+    image_url: `${process.env.BACKEND_URL}/images/${req.file.filename}`
   });
 });
+
 
 // Product Schema
 const Product = mongoose.model("Product", {
