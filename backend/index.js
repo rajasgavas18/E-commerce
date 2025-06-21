@@ -61,7 +61,7 @@ const upload = multer({ storage });
 app.post("/upload", upload.single("product"), (req, res) => {
   res.json({
   "success": 1,
-  "image_url": "https://res.cloudinary.com/df8z20xbs/image/upload/v1718972391/ecommerce_images/product_1718972385809.png"
+  "image_url": "https://res.cloudinary.com/df8z20xbs/image/upload/v1718972391/ecommerce_images/${req.file.filename}"
 });
 });
 
