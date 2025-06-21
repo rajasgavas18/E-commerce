@@ -1,11 +1,7 @@
-
 //  Load environment variables
-
 require("dotenv").config();
 
-
 // Import required packages
-
 const port = process.env.PORT || 4000;
 
 const express = require("express");
@@ -16,17 +12,13 @@ const multer = require("multer");
 const cors = require("cors");
 const path = require("path");
 
-// New imports for Cloudinary
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 app.use(express.json());
 app.use(cors());
 
-
-
 // Connect to the database
-
 mongoose.connect(process.env.MONGO_URL);
 
 // Route for root
@@ -34,18 +26,14 @@ app.get("/", (req, res) => {
   res.send("Express App is Running");
 });
 
-
 // Configure Cloudinary
-
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-
 // Set up multer storage for Cloudinary
-
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -55,19 +43,18 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-
-//  Upload Route
-
+// Upload Route
 app.post("/upload", upload.single("product"), (req, res) => {
+  if (!req.file) {
+    return res.json({ success: 0, error: "No file uploaded" });
+  }
   res.json({
-  "success": 1,
-  "image_url": "https://res.cloudinary.com/df8z20xbs/image/upload/v1750491221/ecommerce_images/jh1aujihckxg4ktsxsmf.png"
+    success: 1,
+    image_url: req.file.path,
+  });
 });
-});
-
 
 // Product Schema
-
 const Product = mongoose.model("Product", {
   id: { type: Number, required: true },
   name: { type: String, required: true },
@@ -79,9 +66,7 @@ const Product = mongoose.model("Product", {
   available: { type: Boolean, default: true },
 });
 
-
 // Add Product
-
 app.post("/addproduct", async (req, res) => {
   let products = await Product.find({});
   let id;
@@ -106,27 +91,21 @@ app.post("/addproduct", async (req, res) => {
   res.json({ success: true, name: req.body.name });
 });
 
-
-//  Remove Product
-
+// Remove Product
 app.post("/removeproduct", async (req, res) => {
   await Product.findOneAndDelete({ id: req.body.id });
   console.log("Removed");
   res.json({ success: true, name: req.body.name });
 });
 
-
 // Get All Products
-
 app.get("/allproducts", async (req, res) => {
   let products = await Product.find({});
   console.log("All Products Fetched");
   res.send(products);
 });
 
-
 // User Model
-
 const Users = mongoose.model("Users", {
   name: { type: String },
   email: { type: String, unique: true },
@@ -135,9 +114,7 @@ const Users = mongoose.model("Users", {
   date: { type: Date, default: Date.now },
 });
 
-
-//  User Registration
-
+// User Registration
 app.post("/signup", async (req, res) => {
   let check = await Users.findOne({ email: req.body.email });
   if (check) {
@@ -166,9 +143,7 @@ app.post("/signup", async (req, res) => {
   res.json({ success: true, token });
 });
 
-
-//  User Login
-
+// User Login
 app.post("/login", async (req, res) => {
   let user = await Users.findOne({ email: req.body.email });
   if (user) {
@@ -189,9 +164,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-
 // New Collections
-
 app.get("/newcollections", async (req, res) => {
   let products = await Product.find({});
   let newcollection = products.slice(1).slice(-8);
@@ -199,9 +172,7 @@ app.get("/newcollections", async (req, res) => {
   res.send(newcollection);
 });
 
-
-//  Popular in Women
-
+// Popular in Women
 app.get("/popularinwomen", async (req, res) => {
   let products = await Product.find({ category: "women" });
   let popular_in_women = products.slice(0, 4);
@@ -209,9 +180,7 @@ app.get("/popularinwomen", async (req, res) => {
   res.send(popular_in_women);
 });
 
-
 // Middleware to fetch user
-
 const fetchUser = async (req, res, next) => {
   const token = req.header("auth-token");
   if (!token) {
@@ -227,9 +196,7 @@ const fetchUser = async (req, res, next) => {
   }
 };
 
-
-//  Add to cart
-
+// Add to cart
 app.post("/addtocart", fetchUser, async (req, res) => {
   console.log("Added", req.body.itemId);
   let userData = await Users.findOne({ _id: req.user.id });
@@ -238,9 +205,7 @@ app.post("/addtocart", fetchUser, async (req, res) => {
   res.send("Added");
 });
 
-
 // Remove from cart
-
 app.post("/removefromcart", fetchUser, async (req, res) => {
   console.log("removed", req.body.itemId);
   let userData = await Users.findOne({ _id: req.user.id });
@@ -251,18 +216,14 @@ app.post("/removefromcart", fetchUser, async (req, res) => {
   res.send("Removed");
 });
 
-
 // Get cart data
-
 app.post("/getcart", fetchUser, async (req, res) => {
   console.log("GetCart");
   let userData = await Users.findOne({ _id: req.user.id });
   res.json(userData.cartData);
 });
 
-
 // Start the server
-
 app.listen(port, (error) => {
   if (!error) {
     console.log("Server Running on Port " + port);
